@@ -58,8 +58,10 @@ O recurso Encounter é o "coração" da nossa modelagem. Ele amarra quem fez a v
 
 ### Vínculos
 
+- `class`: elemento obrigatório do `Encounter` (em FHIR R4, do tipo `Coding`), indicando o contexto do encontro.
 - `location.location`: referência ao Location, representando o imóvel visitado.
 - `participant`: referência ao PractitionerRole, o agente.
+- `subject`: neste cenário territorial, não é usado para `Location`; deve referenciar `Patient`/`Group` quando houver sujeito clínico.
 
 ```json
 {
