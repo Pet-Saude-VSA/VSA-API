@@ -58,14 +58,23 @@ O recurso Encounter é o "coração" da nossa modelagem. Ele amarra quem fez a v
 
 ### Vínculos
 
-- `subject`: referência ao Location, a casa visitada.
+- `location.location`: referência ao Location, representando o imóvel visitado.
 - `participant`: referência ao PractitionerRole, o agente.
 
 ```json
 {
   "resourceType": "Encounter",
   "status": "finished",
-  "subject": { "reference": "Location/imovel-123" },
+  "class": {
+    "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+    "code": "HH",
+    "display": "home health"
+  },
+  "location": [
+    {
+      "location": { "reference": "Location/imovel-123" }
+    }
+  ],
   "participant": [
     { "individual": { "reference": "PractitionerRole/role-ace-789" } }
   ]
@@ -84,6 +93,7 @@ Tudo o que o agente conta ou inspeciona é uma Observation vinculada ao Encounte
 ```json
 {
   "resourceType": "Observation",
+  "status": "final",
   "encounter": { "reference": "Encounter/visita-001" },
   "code": {
     "coding": [{ "code": "depositos-inspecionados", "display": "Depósitos Inspecionados" }]
@@ -103,6 +113,7 @@ A coleta física de larvas para análise laboratorial.
 
 - `identifier`: código de barras ou numeração única do tubito.
 - `type`: classificação do depósito onde foi encontrado, por exemplo A1, A2, B, C, D1, D2 ou E.
+- `collection.collector`: referência ao `Practitioner` responsável pela coleta.
 
 ```json
 {
@@ -112,7 +123,7 @@ A coleta física de larvas para análise laboratorial.
     "coding": [{ "code": "A1", "display": "Depósito de Armazenamento de Água" }]
   },
   "collection": {
-    "collector": { "reference": "PractitionerRole/role-ace-789" }
+    "collector": { "reference": "Practitioner/joao-silva" }
   }
 }
 ```
@@ -123,7 +134,8 @@ Aplicações de larvicida ou adulticida durante a visita.
 
 ### Registro de Gramas
 
-- Utilizamos o campo de consumíveis para descrever a quantidade de veneno aplicada.
+- O `Procedure.usedCode` identifica o insumo aplicado.
+- A quantidade em gramas é registrada em uma `Observation` vinculada ao procedimento via `partOf`.
 
 ```json
 {
@@ -136,5 +148,22 @@ Aplicações de larvicida ou adulticida durante a visita.
   "focalDevice": [
     { "action": { "coding": [{ "display": "Aplicação focal" }] } }
   ]
+}
+```
+
+```json
+{
+  "resourceType": "Observation",
+  "status": "final",
+  "partOf": [{ "reference": "Procedure/proc-001" }],
+  "code": {
+    "coding": [{ "code": "quantidade-aplicada", "display": "Quantidade aplicada" }]
+  },
+  "valueQuantity": {
+    "value": 25,
+    "unit": "g",
+    "system": "http://unitsofmeasure.org",
+    "code": "g"
+  }
 }
 ```
