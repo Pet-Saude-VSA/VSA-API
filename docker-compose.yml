@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:15
+    container_name: vsa-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: vsa_admin
+      POSTGRES_PASSWORD: vsa_password
+      POSTGRES_DB: vsa_saude_db
+    ports:
+      - '5432:5432'
