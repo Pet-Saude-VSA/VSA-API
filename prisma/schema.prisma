@@ -1,30 +1,32 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
 // prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
 }
 
+// Repare que não tem mais a linha "url" aqui!
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Location {
   id           String   @id @default(uuid())
   physicalType String
   createdAt    DateTime @default(now())
+}
+
+model User {
+  id             String   @id @default(uuid())
+  cpf            String   @unique
+  passwordHash   String   // Guardamos o Hash seguro, NUNCA a senha em texto!
+  role           String   // Ex: 'ACE', 'SUPERVISOR'
+  practitionerId String   // ID de referência para o sistema FHIR
+  createdAt      DateTime @default(now())
+}
+
+model Encounter {
+  id         String   @id @default(uuid())
+  locationId String
+  status     String
+  date       DateTime @default(now())
 }
