@@ -1,10 +1,7 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Repare que não tem mais a linha "url" aqui!
 datasource db {
   provider = "postgresql"
 }
@@ -18,9 +15,10 @@ model Location {
 model User {
   id             String   @id @default(uuid())
   cpf            String   @unique
-  passwordHash   String   // Guardamos o Hash seguro, NUNCA a senha em texto!
-  role           String   // Ex: 'ACE', 'SUPERVISOR'
-  practitionerId String   // ID de referência para o sistema FHIR
+  nome           String   // Necessário para o FHIR Parser!
+  passwordHash   String
+  role           String
+  practitionerId String
   createdAt      DateTime @default(now())
 }
 
