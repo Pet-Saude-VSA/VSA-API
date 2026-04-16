@@ -28,43 +28,59 @@ export class SyncService {
           const resource = entry.resource;
 
           if (resource.resourceType === 'Encounter') {
-            await tx.encounter.create({
-              data: {
-                id: resource.id,
-                locationId: resource.subject?.reference?.replace('Location/', '') || '', 
-                status: resource.status,
-                date: new Date(resource.period?.start || new Date()),
-              },
+            const encounterData = {
+              id: resource.id,
+              locationId: resource.subject?.reference?.replace('Location/', '') || '',
+              status: resource.status,
+              date: new Date(resource.period?.start || new Date()),
+            };
+
+            await tx.encounter.upsert({
+              where: { id: resource.id },
+              create: encounterData,
+              update: encounterData,
             });
             encountersCreated++;
           } 
           else if (resource.resourceType === 'Specimen') {
-            await tx.specimen.create({
-              data: {
-                id: resource.id,
-                encounterId: resource.request?.[0]?.reference?.replace('Encounter/', '') || '', 
-                type: resource.type?.text || 'Amostra não especificada',
-              },
+            const specimenData = {
+              id: resource.id,
+              encounterId: resource.request?.[0]?.reference?.replace('Encounter/', '') || '',
+              type: resource.type?.text || 'Amostra não especificada',
+            };
+
+            await tx.specimen.upsert({
+              where: { id: resource.id },
+              create: specimenData,
+              update: specimenData,
             });
             specimensCreated++;
           }
           else if (resource.resourceType === 'Observation') {
-            await tx.observation.create({
-              data: {
-                id: resource.id,
-                encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
-                code: resource.code?.text || 'Foco não especificado',
-              },
+            const observationData = {
+              id: resource.id,
+              encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
+              code: resource.code?.text || 'Foco não especificado',
+            };
+
+            await tx.observation.upsert({
+              where: { id: resource.id },
+              create: observationData,
+              update: observationData,
             });
             observationsCreated++;
           }
           else if (resource.resourceType === 'Procedure') {
-            await tx.procedure.create({
-              data: {
-                id: resource.id,
-                encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
-                name: resource.code?.text || 'Tratamento não especificado',
-              },
+            const procedureData = {
+              id: resource.id,
+              encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
+              name: resource.code?.text || 'Tratamento não especificado',
+            };
+
+            await tx.procedure.upsert({
+              where: { id: resource.id },
+              create: procedureData,
+              update: procedureData,
             });
             proceduresCreated++;
           }
