@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { SyncService } from './sync.service';
 
 describe('SyncService', () => {
-  it('deve rejeitar bundle do tipo transaction', async () => {
+  it('should reject transaction bundle type', async () => {
     const prismaMock = {
       $transaction: jest.fn(),
     };
@@ -21,7 +21,7 @@ describe('SyncService', () => {
     );
   });
 
-  it('deve processar bundle collection', async () => {
+  it('should process collection bundle', async () => {
     const txMock = {
       encounter: { upsert: jest.fn() },
       specimen: { upsert: jest.fn() },
