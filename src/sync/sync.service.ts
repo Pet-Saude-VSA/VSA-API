@@ -11,6 +11,10 @@ export class SyncService {
       throw new BadRequestException('Payload inválido. Esperado FHIR Bundle do tipo transaction.');
     }
 
+    // 1.1. Valida se o bundle possui entries em formato de array
+    if (!Array.isArray(bundle.entry)) {
+      throw new BadRequestException('Payload inválido. Esperado `bundle.entry` como array de itens.');
+    }
     // 2. Inicia a transação ACID no Banco
     try {
       const result = await this.prisma.$transaction(async (tx) => {
