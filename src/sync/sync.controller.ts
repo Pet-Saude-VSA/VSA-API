@@ -1,22 +1,24 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { SyncService } from './sync.service';
 
 @Controller('sync')
 export class SyncController {
-  constructor(private prisma: PrismaService) {}
+  // Injetamos o Prisma (para o GET) e o SyncService (para o POST)
+  constructor(
+    private prisma: PrismaService,
+    private syncService: SyncService // <-- Adicionado
+  ) {}
 
-  @UseGuards(JwtAuthGuard) // 🔒 Fechadura ativada! Sem Token não entra.
+  @UseGuards(JwtAuthGuard) 
   @Get('initial-load')
   async initialLoad(@Request() req) {
-    // Graças ao nosso JwtStrategy, sabemos exatamente quem é o agente logado
     const agente = req.user;
     
-    // Busca os imóveis e visitas reais no banco de dados via Prisma
     const locations = await this.prisma.location.findMany();
     const encounters = await this.prisma.encounter.findMany();
 
-    // Retorna tudo empacotado no padrão FHIR (Bundle) conforme o seu MODELAGEM_FHIR.md
     return {
       resourceType: "Bundle",
       type: "searchset",
@@ -42,5 +44,11 @@ export class SyncController {
         }))
       ]
     };
+  }
+  @UseGuards(JwtAuthGuard) // Protegida! Só entra com o Token do login.
+  @Post('upload-visits')
+  async uploadVisits(@Body() fhirBundle: any) {
+    // Repassa o pacotão de dados pro Service processar com segurança (Transação ACID)
+    return this.syncService.processBulkSync(fhirBundle);
   }
 }

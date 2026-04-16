@@ -6,19 +6,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SyncModule = void 0;
+exports.FhirParserService = void 0;
 const common_1 = require("@nestjs/common");
-const sync_controller_1 = require("./sync.controller");
-const sync_service_1 = require("./sync.service");
-const prisma_module_1 = require("../prisma/prisma.module");
-let SyncModule = class SyncModule {
+let FhirParserService = class FhirParserService {
+    toPractitioner(user) {
+        return {
+            resourceType: 'Practitioner',
+            id: user.id,
+            identifier: [
+                { system: 'http://gov.br/cpf', value: user.cpf },
+            ],
+            name: [
+                { use: 'official', text: user.nome },
+            ],
+        };
+    }
 };
-exports.SyncModule = SyncModule;
-exports.SyncModule = SyncModule = __decorate([
-    (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
-        controllers: [sync_controller_1.SyncController],
-        providers: [sync_service_1.SyncService],
-    })
-], SyncModule);
-//# sourceMappingURL=sync.module.js.map
+exports.FhirParserService = FhirParserService;
+exports.FhirParserService = FhirParserService = __decorate([
+    (0, common_1.Injectable)()
+], FhirParserService);
+//# sourceMappingURL=fhir-parser.service.js.map

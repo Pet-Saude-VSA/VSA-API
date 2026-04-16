@@ -153,6 +153,15 @@ Aplicações de larvicida ou adulticida durante a visita.
 }
 ```
 
+## 7. Contrato do endpoint `POST /sync/upload-visits`
+
+Para a sincronização em lote deste endpoint, o payload aceito é um `Bundle` FHIR do tipo `collection`, contendo os recursos diretamente em `entry.resource`.
+
+- `resourceType`: `Bundle`
+- `type`: `collection`
+- `entry`: array de itens com `resource`
+- `entry.request`: **não suportado** neste endpoint
+
 ```json
 {
   "resourceType": "Observation",

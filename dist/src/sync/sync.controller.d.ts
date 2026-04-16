@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { SyncService } from './sync.service';
 export declare class SyncController {
     private prisma;
-    constructor(prisma: PrismaService);
+    private syncService;
+    constructor(prisma: PrismaService, syncService: SyncService);
     initialLoad(req: any): Promise<{
         resourceType: string;
         type: string;
@@ -29,5 +31,14 @@ export declare class SyncController {
                 }[];
             };
         })[];
+    }>;
+    uploadVisits(fhirBundle: any): Promise<{
+        message: string;
+        resumo: {
+            visitas: number;
+            amostras: number;
+            achados: number;
+            tratamentos: number;
+        };
     }>;
 }

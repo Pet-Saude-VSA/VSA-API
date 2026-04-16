@@ -1,32 +1,58 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Repare que não tem mais a linha "url" aqui!
 datasource db {
   provider = "postgresql"
-}
-
-model Location {
-  id           String   @id @default(uuid())
-  physicalType String
-  createdAt    DateTime @default(now())
 }
 
 model User {
   id             String   @id @default(uuid())
   cpf            String   @unique
-  passwordHash   String   // Guardamos o Hash seguro, NUNCA a senha em texto!
-  role           String   // Ex: 'ACE', 'SUPERVISOR'
-  practitionerId String   // ID de referência para o sistema FHIR
+  nome           String
+  passwordHash   String
+  role           String
+  practitionerId String
   createdAt      DateTime @default(now())
 }
 
+model Location {
+  id           String      @id @default(uuid())
+  physicalType String
+  createdAt    DateTime    @default(now())
+  encounters   Encounter[] // Uma localização pode ter várias visitas
+}
+
 model Encounter {
-  id         String   @id @default(uuid())
-  locationId String
-  status     String
-  date       DateTime @default(now())
+  id           String        @id @default(uuid())
+  locationId   String
+  status       String
+  date         DateTime      @default(now())
+  
+  // Relacionamentos
+  location     Location      @relation(fields: [locationId], references: [id])
+  specimens    Specimen[]
+  observations Observation[]
+  procedures   Procedure[]
+}
+
+model Specimen {
+  id          String    @id @default(uuid())
+  encounterId String
+  type        String    // Ex: "Aedes aegypti"
+  encounter   Encounter @relation(fields: [encounterId], references: [id])
+}
+
+model Observation {
+  id          String    @id @default(uuid())
+  encounterId String
+  code        String    // Ex: "Foco Encontrado"
+  encounter   Encounter @relation(fields: [encounterId], references: [id])
+}
+
+model Procedure {
+  id          String    @id @default(uuid())
+  encounterId String
+  name        String    // Ex: "Aplicação de Larvicida"
+  encounter   Encounter @relation(fields: [encounterId], references: [id])
 }
