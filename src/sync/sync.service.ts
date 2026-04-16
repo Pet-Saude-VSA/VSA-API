@@ -6,14 +6,22 @@ export class SyncService {
   constructor(private prisma: PrismaService) {}
 
   async processBulkSync(bundle: any) {
-    // 1. Valida se é um bundle de transação
-    if (bundle.resourceType !== 'Bundle' || bundle.type !== 'transaction') {
-      throw new BadRequestException('Payload inválido. Esperado FHIR Bundle do tipo transaction.');
+    // 1. Valida se é um bundle no contrato suportado por este endpoint
+    if (bundle.resourceType !== 'Bundle') {
+      throw new BadRequestException('Payload inválido. Esperado FHIR Bundle.');
+    }
+
+    if (bundle.type !== 'collection') {
+      throw new BadRequestException('Payload inválido. Esperado FHIR Bundle do tipo collection para este endpoint.');
     }
 
     // 1.1. Valida se o bundle possui entries em formato de array
     if (!Array.isArray(bundle.entry)) {
       throw new BadRequestException('Payload inválido. Esperado `bundle.entry` como array de itens.');
+    }
+
+    if (bundle.entry.some((entry: any) => entry?.request)) {
+      throw new BadRequestException('Payload inválido. Este endpoint suporta apenas entries com `resource` (sem `entry.request`).');
     }
     // 2. Inicia a transação ACID no Banco
     try {
