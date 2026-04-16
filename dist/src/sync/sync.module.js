@@ -9,12 +9,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SyncModule = void 0;
 const common_1 = require("@nestjs/common");
 const sync_controller_1 = require("./sync.controller");
+const sync_service_1 = require("./sync.service");
+const prisma_module_1 = require("../prisma/prisma.module");
 let SyncModule = class SyncModule {
 };
 exports.SyncModule = SyncModule;
 exports.SyncModule = SyncModule = __decorate([
     (0, common_1.Module)({
-        controllers: [sync_controller_1.SyncController]
+        imports: [prisma_module_1.PrismaModule],
+        controllers: [sync_controller_1.SyncController],
+        providers: [sync_service_1.SyncService],
     })
 ], SyncModule);
 //# sourceMappingURL=sync.module.js.map
