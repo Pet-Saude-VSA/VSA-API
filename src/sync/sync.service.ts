@@ -1,11 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadVisitsBundleDto } from './dto/upload-visits-bundle.dto'; // Importe o DTO que criamos
 
 @Injectable()
 export class SyncService {
   constructor(private prisma: PrismaService) {}
 
-  async processBulkSync(bundle: any) {
+  async processBulkSync(bundle: UploadVisitsBundleDto) {
     // 1. Valida se é um bundle no contrato suportado por este endpoint
     if (bundle.resourceType !== 'Bundle') {
       throw new BadRequestException('Payload inválido. Esperado FHIR Bundle.');
@@ -23,6 +24,7 @@ export class SyncService {
     if (bundle.entry.some((entry: any) => entry?.request)) {
       throw new BadRequestException('Payload inválido. Este endpoint suporta apenas entries com `resource` (sem `entry.request`).');
     }
+
     // 2. Inicia a transação ACID no Banco
     try {
       const result = await this.prisma.$transaction(async (tx) => {
@@ -55,6 +57,8 @@ export class SyncService {
               id: resource.id,
               encounterId: resource.request?.[0]?.reference?.replace('Encounter/', '') || '',
               type: resource.type?.text || 'Amostra não especificada',
+              tubitoId: resource.tubitoId,
+              quantidade: resource.quantidade ?? 1,
             };
 
             await tx.specimen.upsert({
@@ -69,6 +73,7 @@ export class SyncService {
               id: resource.id,
               encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
               code: resource.code?.text || 'Foco não especificado',
+              valueQuantity: resource.valueQuantity ?? 0,
             };
 
             await tx.observation.upsert({
@@ -83,6 +88,8 @@ export class SyncService {
               id: resource.id,
               encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
               name: resource.code?.text || 'Tratamento não especificado',
+              realizado: resource.realizado ?? true,
+              quantidade: resource.quantidade,
             };
 
             await tx.procedure.upsert({

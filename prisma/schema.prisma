@@ -20,7 +20,7 @@ model Location {
   id           String      @id @default(uuid())
   physicalType String
   createdAt    DateTime    @default(now())
-  encounters   Encounter[] // Uma localização pode ter várias visitas
+  encounters   Encounter[]
 }
 
 model Encounter {
@@ -28,31 +28,49 @@ model Encounter {
   locationId   String
   status       String
   date         DateTime      @default(now())
-  
-  // Relacionamentos
+
   location     Location      @relation(fields: [locationId], references: [id])
   specimens    Specimen[]
   observations Observation[]
   procedures   Procedure[]
 }
 
-model Specimen {
-  id          String    @id @default(uuid())
-  encounterId String
-  type        String    // Ex: "Aedes aegypti"
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
-}
-
+/// Achados quantitativos da ação mecânica (ex: depósitos inspecionados/eliminados)
 model Observation {
-  id          String    @id @default(uuid())
-  encounterId String
-  code        String    // Ex: "Foco Encontrado"
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  id            String @id @default(uuid())
+  encounterId   String
+  code          String // "depositos-inspecionados" | "depositos-eliminados"
+  valueQuantity Int    @default(0)
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([encounterId])
 }
 
+/// Foco/tubito coletado para envio ao laboratório
+model Specimen {
+  id                   String  @id @default(uuid())
+  encounterId          String
+  type                 String  // Classificação do depósito: A1, A2, B, C, D1, D2 ou E
+  tubitoId             String? // Código/identificador único do tubito de coleta
+  quantidade           Int     @default(1)
+  resultadoLaboratorio String? // null = pendente | "positivo" | "negativo"
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([encounterId])
+  @@index([resultadoLaboratorio])
+}
+
+/// Ação de tratamento químico (larvicida/adulticida)
 model Procedure {
-  id          String    @id @default(uuid())
+  id          String  @id @default(uuid())
   encounterId String
-  name        String    // Ex: "Aplicação de Larvicida"
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  name        String  // tipo de larvicida/adulticida aplicado
+  realizado   Boolean @default(true) // indicador de uso
+  quantidade  Float?  // quantidade aplicada em gramas/ml
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([encounterId])
 }
