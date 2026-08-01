@@ -67,8 +67,12 @@ export class ResourceDto {
   tubitoId?: string;
 
   @IsOptional()
+  @ValidateIf((o) => o.resourceType === 'Specimen')
   @IsInt()
   @Min(1)
+  @ValidateIf((o) => o.resourceType === 'Procedure')
+  @IsNumber()
+  @Min(0)
   quantidade?: number;
 
   // --- Observation / Procedure ---
@@ -83,13 +87,15 @@ export class ResourceDto {
   code?: TextCodeDto;
 
   @IsOptional()
+  @ValidateIf((o) => o.resourceType === 'Observation')
   @IsInt()
   @Min(0)
   valueQuantity?: number;
 
   @IsOptional()
+  @ValidateIf((o) => o.resourceType === 'Procedure')
+  @IsBoolean()
   realizado?: boolean;
-}
 
 export class EntryDto {
   @ValidateNested()
