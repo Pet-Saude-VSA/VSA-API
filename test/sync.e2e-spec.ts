@@ -31,10 +31,7 @@ describe('SyncController (e2e)', () => {
       practitionerId: 'test-practitioner-id',
     };
     
-    // JWT secret from AuthModule: 'chave-secreta-vsa-super-segura'
-    token = await jwtService.signAsync(payload, {
-      secret: 'chave-secreta-vsa-super-segura',
-    });
+    token = await jwtService.signAsync(payload);
 
     // Seed required default location
     await prisma.location.upsert({
