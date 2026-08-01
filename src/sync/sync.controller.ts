@@ -2,13 +2,13 @@ import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { SyncService } from './sync.service';
+import { UploadVisitsBundleDto } from './dto/upload-visits-bundle.dto';
 
 @Controller('sync')
 export class SyncController {
-  // Injetamos o Prisma (para o GET) e o SyncService (para o POST)
   constructor(
     private prisma: PrismaService,
-    private syncService: SyncService // <-- Adicionado
+    private syncService: SyncService,
   ) {}
 
   @UseGuards(JwtAuthGuard) 
@@ -47,7 +47,7 @@ export class SyncController {
   }
   @UseGuards(JwtAuthGuard) // Protegida! Só entra com o Token do login.
   @Post('upload-visits')
-  async uploadVisits(@Body() fhirBundle: any) {
+  async uploadVisits(@Body() fhirBundle: UploadVisitsBundleDto) {
     // Repassa o pacotão de dados pro Service processar com segurança (Transação ACID)
     return this.syncService.processBulkSync(fhirBundle);
   }
