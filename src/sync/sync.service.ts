@@ -33,72 +33,94 @@ export class SyncService {
         let observationsCreated = 0;
         let proceduresCreated = 0;
 
-        // 3. Desmembra o payload
-        for (const entry of bundle.entry) {
+        // 3. Desmembra o payload e processa ordenadamente
+        const entries = bundle.entry;
+
+        const encounters = entries.filter((e) => e.resource.resourceType === 'Encounter');
+        const specimens = entries.filter((e) => e.resource.resourceType === 'Specimen');
+        const observations = entries.filter((e) => e.resource.resourceType === 'Observation');
+        const procedures = entries.filter((e) => e.resource.resourceType === 'Procedure');
+
+        // 3.1. Processa todos os Encounters
+        for (const entry of encounters) {
           const resource = entry.resource;
+          const encounterData = {
+            id: resource.id,
+            locationId: resource.subject?.reference?.replace('Location/', '') || '',
+            status: resource.status || 'finished',
+            date: new Date(resource.period?.start || new Date()),
+          };
 
-          if (resource.resourceType === 'Encounter') {
-            const encounterData = {
-              id: resource.id,
-              locationId: resource.subject?.reference?.replace('Location/', '') || '',
-              status: resource.status,
-              date: new Date(resource.period?.start || new Date()),
-            };
+          await tx.encounter.upsert({
+            where: { id: resource.id },
+            create: encounterData,
+            update: encounterData,
+          });
+          encountersCreated++;
+        }
 
-            await tx.encounter.upsert({
-              where: { id: resource.id },
-              create: encounterData,
-              update: encounterData,
-            });
-            encountersCreated++;
-          } 
-          else if (resource.resourceType === 'Specimen') {
-            const specimenData = {
-              id: resource.id,
-              encounterId: resource.request?.[0]?.reference?.replace('Encounter/', '') || '',
-              type: resource.type?.text || 'Amostra não especificada',
-              tubitoId: resource.tubitoId,
-              quantidade: resource.quantidade ?? 1,
-            };
+        // 3.2. Processa todos os Specimens (Amostras)
+        for (const entry of specimens) {
+          const resource = entry.resource;
+          const specimenData = {
+            id: resource.id,
+            encounterId: resource.request?.[0]?.reference?.replace('Encounter/', '') || '',
+            type: resource.type?.text || 'Amostra não especificada',
+            tubitoId: resource.tubitoId || null,
+            quantidade: resource.quantidade ?? 1,
+          };
 
-            await tx.specimen.upsert({
-              where: { id: resource.id },
-              create: specimenData,
-              update: specimenData,
-            });
-            specimensCreated++;
-          }
-          else if (resource.resourceType === 'Observation') {
-            const observationData = {
-              id: resource.id,
-              encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
-              code: resource.code?.text || 'Foco não especificado',
-              valueQuantity: resource.valueQuantity ?? 0,
-            };
+          await tx.specimen.upsert({
+            where: { id: resource.id },
+            create: {
+              ...specimenData,
+              resultadoLaboratorio: null,
+            },
+            update: {
+              encounterId: specimenData.encounterId,
+              type: specimenData.type,
+              tubitoId: specimenData.tubitoId,
+              quantidade: specimenData.quantidade,
+            },
+          });
+          specimensCreated++;
+        }
 
-            await tx.observation.upsert({
-              where: { id: resource.id },
-              create: observationData,
-              update: observationData,
-            });
-            observationsCreated++;
-          }
-          else if (resource.resourceType === 'Procedure') {
-            const procedureData = {
-              id: resource.id,
-              encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
-              name: resource.code?.text || 'Tratamento não especificado',
-              realizado: resource.realizado ?? true,
-              quantidade: resource.quantidade,
-            };
+        // 3.3. Processa todas as Observations (Achados/Depósitos)
+        for (const entry of observations) {
+          const resource = entry.resource;
+          const observationData = {
+            id: resource.id,
+            encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
+            code: resource.code?.text || 'Foco não especificado',
+            valueQuantity: resource.valueQuantity ?? 0,
+          };
 
-            await tx.procedure.upsert({
-              where: { id: resource.id },
-              create: procedureData,
-              update: procedureData,
-            });
-            proceduresCreated++;
-          }
+          await tx.observation.upsert({
+            where: { id: resource.id },
+            create: observationData,
+            update: observationData,
+          });
+          observationsCreated++;
+        }
+
+        // 3.4. Processa todos os Procedures (Tratamentos Químicos)
+        for (const entry of procedures) {
+          const resource = entry.resource;
+          const procedureData = {
+            id: resource.id,
+            encounterId: resource.encounter?.reference?.replace('Encounter/', '') || '',
+            name: resource.code?.text || 'Tratamento não especificado',
+            realizado: resource.realizado ?? true,
+            quantidade: resource.quantidade !== undefined ? resource.quantidade : null,
+          };
+
+          await tx.procedure.upsert({
+            where: { id: resource.id },
+            create: procedureData,
+            update: procedureData,
+          });
+          proceduresCreated++;
         }
 
         // Retorna um resumo do que foi salvo
